@@ -1,10 +1,11 @@
 package main
 
 import (
-	"strings"
 	"bufio"
+	"redis/models"
 	"net"
 	"log"
+	"redis/service"
 )
 
 
@@ -31,22 +32,14 @@ func startServer() {
 
 func handleConnection(conn net.Conn) {
 
-		scanner := bufio.NewScanner(conn)
-		var command_set []string
-
-		for scanner.Scan() {
-			count := atoi scanner.Text()
-			command_set = append(command_set, command)
-			log.Println("Got Command", command)
-			if strings.HasSuffix(command, "\r\n") {
-				break
-			}
-		}
-		response := parse(command_set)
-		log.Println("Response", response)
-		writer := bufio.NewWriter(conn)
-		writer.WriteString(response)
-		writer.Flush()
-
+		command := models.NewCommand(conn)
+		log.Printf("Command: %v ", command)
+		go func ()  {
+			writer := bufio.NewWriter(conn)
+			response := service.Run(command)
+			log.Printf("Response: %v ", response)
+			writer.WriteString(response + "\r\n")
+			writer.Flush()
+		}()
 
 }
