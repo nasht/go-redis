@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"bufio"
 	"net"
 	"log"
@@ -31,16 +32,21 @@ func startServer() {
 func handleConnection(conn net.Conn) {
 
 		scanner := bufio.NewScanner(conn)
+		var command_set []string
 
 		for scanner.Scan() {
-			command := scanner.Text()
-			log.Println("Read", command)
-			response := parse(command)
-			log.Println("Response", response)
-			writer := bufio.NewWriter(conn)
-			writer.WriteString(response)
-			writer.Flush()
+			count := atoi scanner.Text()
+			command_set = append(command_set, command)
+			log.Println("Got Command", command)
+			if strings.HasSuffix(command, "\r\n") {
+				break
+			}
 		}
+		response := parse(command_set)
+		log.Println("Response", response)
+		writer := bufio.NewWriter(conn)
+		writer.WriteString(response)
+		writer.Flush()
 
 
 }
